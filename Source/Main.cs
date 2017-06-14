@@ -214,7 +214,7 @@ namespace ModMedicinePatch
 				}
 				if (medCare == mc)
 				{
-					Widgets.DrawBox(rect2, 2);
+					Widgets.DrawBox(rect2, 1);
 				}
 				TooltipHandler.TipRegion(rect2, () => mc.GetLabel(), 632165 + k * 17);
 
