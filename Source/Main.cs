@@ -9,6 +9,13 @@ using RimWorld;
 using UnityEngine;
 using Verse.Sound;
 
+/* notes
+ * Medical Defaults vertical padding: 34
+ * Medical Overview tab vertical padding: ~32
+ * ITab pawn visitor (?) 44?
+ * Medical Tab vertical padding: 30 minimum
+ */
+
 namespace ModMedicinePatch
 {
 	[StaticConstructorOnStartup]
@@ -188,6 +195,52 @@ namespace ModMedicinePatch
 		public static void DynamicMedicalCareSetter(Rect rect, ref MedicalCareCategory medCare)
 		{
 			//modified CareSetter/UI panel
+			float scaleFacV = 0.5f;
+			float scaleFacH = 5.0f / (medsList.Count + 2);
+			int nFirstRow = (int)Mathf.Ceil(0.5f * (medsList.Count + 2));
+			bool row = (scaleFacV > scaleFacH);
+			if (row)
+			{
+				scaleFacH = 5.0f / nFirstRow;
+			}
+			float scaleFac = Mathf.Max(scaleFacV, scaleFacH);
+			
+
+
+			Rect rect2 = new Rect(rect.x + (row ? 0.5f * nFirstRow * rect.width * scaleFac / 5 : 0), rect.y + (row ? scaleFac * -0.5f * rect.height : (1f-scaleFac) * rect.height * 0.5f), rect.width * scaleFac / 5, rect.height * scaleFac);
+			for (int i = 0; i < medsList.Count + 2; i++)
+			{
+				int k = i;
+				if (i >= 2)
+				{
+					k = medsListOrder[i - 2]+2;
+				}
+
+				MedicalCareCategory mc = (MedicalCareCategory)k;
+				Widgets.DrawHighlightIfMouseover(rect2);
+				GUI.DrawTexture(rect2, ModMedicalCareUtility.careTextures[k]);
+				if (Widgets.ButtonInvisible(rect2, false))
+				{
+					medCare = mc;
+					SoundDefOf.TickHigh.PlayOneShotOnCamera(null);
+				}
+				if (medCare == mc)
+				{
+					Widgets.DrawBox(rect2, 1);
+				}
+				TooltipHandler.TipRegion(rect2, () => mc.GetLabel(), 632165 + k * 17);
+
+				rect2.x += rect2.width;
+				if (row)
+				{
+					if (i == nFirstRow - 1) {
+						rect2.y += rect2.height;
+						rect2.x = rect.x + (row ? 0.5f * nFirstRow * rect.width * scaleFac / 5 : 0);
+					}
+				}
+			}
+
+			/*
 			float scaleFac = 5f / (medsList.Count + 2);
 			Rect rect2 = new Rect(rect.x, rect.y + (1-scaleFac) * 0.5f * rect.height, rect.width / (medsList.Count + 2), rect.height * scaleFac);
 			if (medsList.Count + 2 > 7)
@@ -227,6 +280,7 @@ namespace ModMedicinePatch
 					}
 				}
 			}
+			*/
 		}
 	}
 }
