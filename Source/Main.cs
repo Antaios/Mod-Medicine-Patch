@@ -191,7 +191,7 @@ namespace ModMedicinePatch
 				throw new InvalidOperationException();
 			}
 		}
-
+		
 		public static void DynamicMedicalCareSetter(Rect rect, ref MedicalCareCategory medCare)
 		{
 			//modified CareSetter/UI panel
@@ -204,16 +204,16 @@ namespace ModMedicinePatch
 				scaleFacH = 5.0f / nFirstRow;
 			}
 			float scaleFac = Mathf.Max(scaleFacV, scaleFacH);
+			
 
 
-
-			Rect rect2 = new Rect(rect.x + (/*row ? 0.5f * nFirstRow * rect.width * scaleFac / 5 :*/ 0), rect.y + (row ? scaleFac * -0.5f * rect.height : (1f - scaleFac) * rect.height * 0.5f), rect.width * scaleFac / 5, rect.height * scaleFac);
+			Rect rect2 = new Rect(rect.x + (/*row ? 0.5f * nFirstRow * rect.width * scaleFac / 5 :*/ 0), rect.y + (row ? scaleFac * -0.5f * rect.height : (1f-scaleFac) * rect.height * 0.5f), rect.width * scaleFac / 5, rect.height * scaleFac);
 			for (int i = 0; i < medsList.Count + 2; i++)
 			{
 				int k = i;
 				if (i >= 2)
 				{
-					k = medsListOrder[i - 2] + 2;
+					k = medsListOrder[i - 2]+2;
 				}
 
 				MedicalCareCategory mc = (MedicalCareCategory)k;
@@ -233,8 +233,7 @@ namespace ModMedicinePatch
 				rect2.x += rect2.width;
 				if (row)
 				{
-					if (i == nFirstRow - 1)
-					{
+					if (i == nFirstRow - 1) {
 						rect2.y += rect2.height;
 						rect2.x = rect.x/* + (row ? 0.5f * nFirstRow * rect.width * scaleFac / 5 : 0)*/;
 					}
