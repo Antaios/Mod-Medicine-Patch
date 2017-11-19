@@ -131,10 +131,10 @@ namespace ModMedicinePatch
 				if (d.thingCategories != null && d.thingCategories.Contains(ThingCategoryDefOf.Medicine))
 				{
 					//Exclude base game medicines
-					if (d.defName != "HerbalMedicine" && d.defName != "Medicine" && d.defName != "GlitterworldMedicine" && d.GetStatValueAbstract(StatDefOf.MedicalPotency, null) > 0)
+					if (d.defName != "HerbalMedicine" && d.defName != "Medicine" && d.defName != "GlitterworldMedicine" && d.IsMedicine/*GetStatValueAbstract(StatDefOf.MedicalPotency, null) > 0*/)
 					{
 						//add found medicine to medsList
-						Log.Message("Detected mod medicine " + d.label);
+						Log.Message("Detected mod medicine " + d.label + ":" + d.GetStatValueAbstract(StatDefOf.MedicalPotency, null));
 						medsList.Add(d);
 						foundMeds = true;
 					}
