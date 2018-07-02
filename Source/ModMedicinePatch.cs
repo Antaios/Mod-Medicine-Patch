@@ -130,18 +130,16 @@ namespace ModMedicinePatch
 				Log.Message(m.care.GetLabel());
 			}
 
-			if (foundMeds)
-			{
-				//execute patches
-				var harmony = HarmonyInstance.Create("ModMedicinePatch");
-				Log.Message("Patching Mod Medicines...");
-				harmony.PatchAll(Assembly.GetExecutingAssembly());
+			//execute patches
+			var harmony = HarmonyInstance.Create("ModMedicinePatch");
+			Log.Message("Patching Mod Medicines...");
+			harmony.PatchAll(Assembly.GetExecutingAssembly());
 
-				Traverse.Create(typeof(MedicalCareUtility)).Field("careTextures").SetValue(careTex);
-			}
-			else
+			Traverse.Create(typeof(MedicalCareUtility)).Field("careTextures").SetValue(careTex);
+
+			if (!foundMeds)
 			{
-				Log.Warning("No modded medicines found, unable to patch, cancelling medicine patch.");
+				Log.Warning("Note: No modded medicines found");
 			}
 		}
 
