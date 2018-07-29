@@ -31,7 +31,10 @@ namespace ModMedicinePatch
 					{
 						if (!LanguageDatabase.activeLanguage.HaveTextForKey($"MedicalCareCategory_{(int)care}"))
 						{
-							LanguageDatabase.activeLanguage.keyedReplacements.Add($"MedicalCareCategory_{(int)care}", MedicalCareUtility.GetLabel(care));
+							LoadedLanguage.KeyedReplacement kr = new LoadedLanguage.KeyedReplacement();
+							kr.key = $"MedicalCareCategory_{(int)care}";
+							kr.value = MedicalCareUtility.GetLabel(care);
+							LanguageDatabase.activeLanguage.keyedReplacements.Add(kr.key, kr);
 						}
 					}
 
