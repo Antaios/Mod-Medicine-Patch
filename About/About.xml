@@ -2,11 +2,11 @@
 <ModMetaData>
   <name>Mod Medicine Patch</name>
   <author>Antaios</author>
-  <targetVersion>1.0.1943</targetVersion>
+	<targetVersion>0.19.2009</targetVersion>
   <description>
 	A patch to enable modded medicine options in the pawn health tab.
 	
-	Version 1.61
+	Version 1.70
  </description>
 </ModMetaData>
 
