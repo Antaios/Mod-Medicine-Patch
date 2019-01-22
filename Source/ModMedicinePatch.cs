@@ -170,20 +170,37 @@ namespace ModMedicinePatch
 
 		public static void DynamicMedicalCareSetter(Rect rect, ref MedicalCareCategory medCare)
 		{
-			//modified CareSetter/UI panel
-			float scaleFacV = 0.5f;
-			float scaleFacH = 5.0f / (medList.Count);
-			int nFirstRow = (int)Mathf.Ceil(0.5f * medList.Count);
-			bool row = (scaleFacV > scaleFacH);
-			if (row)
-			{
-				scaleFacH = 5.0f / nFirstRow;
-			}
-			float scaleFac = Mathf.Max(scaleFacV, scaleFacH);
+            //modified CareSetter/UI panel
+
+            int nRows = 1;
+            int nPerRow = 10;
+            int nInRow = 0;
+            if (medList.Count > 10)
+            {
+                nRows = 2;
+                nPerRow = 10;
+            }
+            if (medList.Count > 20)
+            {
+                nRows = 3;
+                nPerRow = 15;
+            }
+            if (medList.Count > 45)
+            {
+                nRows = 4;
+                nPerRow = 20;
+            }
+            
+
+            
+			float scaleFac = Mathf.Min(5.0f / (medList.Count),1.0f);
+			if (nRows > 1)
+            {
+                scaleFac = 1.0f / nRows;
+            }
 
 
-
-			Rect rect2 = new Rect(rect.x, rect.y + (row ? scaleFac * -0.5f * rect.height : (1f - scaleFac) * rect.height * 0.5f), rect.width * scaleFac / 5, rect.height * scaleFac);
+			Rect rect2 = new Rect(rect.x, rect.y + (1 - scaleFac * nRows) * 0.5f * rect.height, rect.height * scaleFac, rect.height * scaleFac);
 			for (int i = 0; i < medList.Count; i++)
 			{
 				ModMedicine med = medList[i];
@@ -207,14 +224,14 @@ namespace ModMedicinePatch
 				}
 				TooltipHandler.TipRegion(rect2, () => med.care.GetLabel(), 632165 + (int)med.care * 17);
 
+                nInRow++;
+
 				rect2.x += rect2.width;
-				if (row)
+				if (nInRow == nPerRow)
 				{
-					if (i == nFirstRow - 1)
-					{
-						rect2.y += rect2.height;
-						rect2.x = rect.x;
-					}
+                    nInRow = 0;
+					rect2.y += rect2.height;
+					rect2.x = rect.x;
 				}
 			}
 			if (!Input.GetMouseButton(0))
