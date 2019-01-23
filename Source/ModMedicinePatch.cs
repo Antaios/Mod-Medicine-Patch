@@ -172,35 +172,26 @@ namespace ModMedicinePatch
 		{
             //modified CareSetter/UI panel
 
-            int nRows = 1;
-            int nPerRow = 10;
-            int nInRow = 0;
-            if (medList.Count > 10)
-            {
-                nRows = 2;
-                nPerRow = 10;
-            }
-            if (medList.Count > 20)
-            {
-                nRows = 3;
-                nPerRow = 15;
-            }
-            if (medList.Count > 45)
-            {
-                nRows = 4;
-                nPerRow = 20;
-            }
-            
+            int aspect = Mathf.FloorToInt(rect.width / rect.height);
+            float initialScaleFac = medList[0].tex.height / rect.height;
 
-            
-			float scaleFac = Mathf.Min(5.0f / (medList.Count),1.0f);
+            int nRows = 1;
+            int nInRow = 0;
+            if (medList.Count > aspect * 2)
+            {
+                nRows = Mathf.CeilToInt(Mathf.Sqrt((float)medList.Count / (float)aspect));
+            }
+            int nPerRow = Mathf.CeilToInt((float)medList.Count / (float)nRows);
+
+
+            float scaleFac = Mathf.Min((float)aspect / (medList.Count),1.0f);
 			if (nRows > 1)
             {
                 scaleFac = 1.0f / nRows;
             }
+            scaleFac *= initialScaleFac;
 
-
-			Rect rect2 = new Rect(rect.x, rect.y + (1 - scaleFac * nRows) * 0.5f * rect.height, rect.height * scaleFac, rect.height * scaleFac);
+			Rect rect2 = new Rect(rect.x + 0.5f * (rect.width - (nPerRow * scaleFac * rect.height)), rect.y + (1 - scaleFac * nRows) * 0.5f * rect.height, rect.height * scaleFac, rect.height * scaleFac);
 			for (int i = 0; i < medList.Count; i++)
 			{
 				ModMedicine med = medList[i];
@@ -231,7 +222,7 @@ namespace ModMedicinePatch
 				{
                     nInRow = 0;
 					rect2.y += rect2.height;
-					rect2.x = rect.x;
+					rect2.x = rect.x + 0.5f * (rect.width - (nPerRow * scaleFac * rect.height));
 				}
 			}
 			if (!Input.GetMouseButton(0))
