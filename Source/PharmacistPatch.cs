@@ -5,8 +5,8 @@ using System.Text;
 using UnityEngine;
 using RimWorld;
 using Verse;
-using Harmony;
-
+using HarmonyLib;
+/*
 namespace ModMedicinePatch
 {
 	[StaticConstructorOnStartup]
@@ -90,3 +90,4 @@ namespace ModMedicinePatch
 		}
 	}
 }
+*/

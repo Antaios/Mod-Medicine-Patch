@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Harmony;
+using HarmonyLib;
 using System.Reflection;
 using Verse;
 using RimWorld;
@@ -131,7 +131,7 @@ namespace ModMedicinePatch
 			}
 
 			//execute patches
-			var harmony = HarmonyInstance.Create("ModMedicinePatch");
+			var harmony = new Harmony("ModMedicinePatch");
 			Log.Message("Patching Mod Medicines...");
 			harmony.PatchAll(Assembly.GetExecutingAssembly());
 
@@ -171,10 +171,14 @@ namespace ModMedicinePatch
 		public static void DynamicMedicalCareSetter(Rect rect, ref MedicalCareCategory medCare)
 		{
             //modified CareSetter/UI panel
+            Widgets.DrawHighlightIfMouseover(rect);
 
+            //aspect = number of squares rect fits along the width that are height x height
             int aspect = Mathf.FloorToInt(rect.width / rect.height);
-            float initialScaleFac = medList[0].tex.height / rect.height;
 
+            //initialScaleFac is how much to scale the texture to make it the height of the rect
+            float initialScaleFac = medList[0].tex.height / rect.height;
+            
             int nRows = 1;
             int nInRow = 0;
             if (medList.Count > aspect * 2)
@@ -189,7 +193,7 @@ namespace ModMedicinePatch
             {
                 scaleFac = 1.0f / nRows;
             }
-            scaleFac *= initialScaleFac;
+            //scaleFac *= initialScaleFac;
 
 			Rect rect2 = new Rect(rect.x + 0.5f * (rect.width - (nPerRow * scaleFac * rect.height)), rect.y + (1 - scaleFac * nRows) * 0.5f * rect.height, rect.height * scaleFac, rect.height * scaleFac);
 			for (int i = 0; i < medList.Count; i++)
