@@ -6,7 +6,7 @@ using UnityEngine;
 using RimWorld;
 using Verse;
 using HarmonyLib;
-/*
+
 namespace ModMedicinePatch
 {
 	[StaticConstructorOnStartup]
@@ -53,7 +53,7 @@ namespace ModMedicinePatch
 					Log.Message("Done Patching Pharmacist medcare list");
 
 					Log.Message("Patching Pharmacist comparison function..");
-					var harmony = HarmonyInstance.Create("Antaios.Rimworld.PharmMedicinePatch");
+					var harmony = new Harmony("Antaios.Rimworld.PharmMedicinePatch");
 
 					harmony.Patch(
 						typeof(Pharmacist.PharmacistUtility).GetMethod("TendAdvice", new Type[] { typeof(Pawn), typeof(Pharmacist.InjurySeverity) }),
@@ -90,4 +90,3 @@ namespace ModMedicinePatch
 		}
 	}
 }
-*/
