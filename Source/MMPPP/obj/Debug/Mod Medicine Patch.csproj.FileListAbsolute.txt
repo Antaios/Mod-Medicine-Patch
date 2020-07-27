@@ -1,0 +1,5 @@
+E:\Rimworld\My Mods\B18\Mods\Mod-Medicine-Patch\Assemblies\Mod Medicine Patch.dll
+E:\Rimworld\My Mods\B18\Mods\Mod-Medicine-Patch\Source\obj\Debug\Mod Medicine Patch.dll
+E:\Rimworld\My Mods\1.0U\Mods\Mod-Medicine-Patch\Source\obj\Debug\Mod Medicine Patch.dll
+E:\Rimworld\My Mods\1.0U\Mods\Mod-Medicine-Patch\Assemblies\Mod Medicine Patch.dll
+E:\Rimworld\My Mods\1.0U\Mods\Mod-Medicine-Patch\Source\obj\Debug\Mod Medicine Patch.csprojResolveAssemblyReference.cache
