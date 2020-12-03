@@ -8,4 +8,9 @@
     <li>1.1</li>
 	<li IfModActive="fluffy.pharmacist">1.1MMPPP</li>
   </v1.1>
+  <v1.2>
+    <li></li>
+    <li>1.2</li>
+	<li IfModActive="fluffy.pharmacist">1.2MMPPP</li>
+  </v1.2>
 </loadFolders>
