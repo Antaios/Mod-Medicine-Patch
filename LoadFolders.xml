@@ -1,8 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <loadFolders>
-  <default>
-    <li></li>
-  </default>
   <v1.1>
     <li></li>
     <li>1.1</li>
@@ -13,4 +10,9 @@
     <li>1.2</li>
 	<li IfModActive="fluffy.pharmacist">1.2MMPPP</li>
   </v1.2>
+  <v1.3>
+    <li></li>
+    <li>1.3</li>
+	<li IfModActive="fluffy.pharmacist">1.3MMPPP</li>
+  </v1.3>
 </loadFolders>
