@@ -33,9 +33,9 @@ namespace ModMedicinePatch
 		[HarmonyPrefix]
 		public static bool _Prefix(this MedicalCareCategory cat, ref bool __state)
 		{
-			//if MedicalCareCategory is within base game range, use original method.
+			//if MedicalCareCategory is within base game range, use original method - EXCEPT glitterworld.
 			__state = false;
-			if ((int)cat <= 4) __state = true;
+			if ((int)cat <= 3) __state = true;
 			return __state;
 		}
 
@@ -56,9 +56,9 @@ namespace ModMedicinePatch
 		[HarmonyPrefix]
 		public static bool _Prefix(this MedicalCareCategory cat, ref bool __state)
 		{
-			//if MedicalCareCategory is within base game range, use original method.
+			//if MedicalCareCategory is within base game range, use original method - EXCEPT glitterworld.
 			__state = false;
-			if ((int)cat <= 4) __state = true;
+			if ((int)cat <= 3) __state = true;
 			return __state;
 		}
 

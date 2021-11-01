@@ -124,14 +124,24 @@ namespace ModMedicinePatch
 			indexedMedList.Insert(0, new ModMedicine((MedicalCareCategory)0, 0, careTex[0]));
 			indexedMedList.Insert(1, new ModMedicine((MedicalCareCategory)1, 0, careTex[1]));
 
-			Log.Message("Sorted meds list: ");
+            InventoryStockGroupDefOf.Medicine.thingDefs = new List<ThingDef>();
+
+            Log.Message("Sorted meds list: ");
 			foreach (ModMedicine m in medList)
 			{
-				Log.Message(m.care.GetLabel());
+                Log.Message(m.care.GetLabel());
+                if (m.thingDef != null)
+                {
+                    InventoryStockGroupDefOf.Medicine.thingDefs.Add(m.thingDef);
+                    Log.Message(m.thingDef.LabelCap);
+                }
+                Log.Message("-");
 			}
 
-			//execute patches
-			var harmony = new Harmony("ModMedicinePatch");
+            InventoryStockGroupDefOf.Medicine.max = InventoryStockGroupDefOf.Medicine.thingDefs.Count;
+
+            //execute patches
+            var harmony = new Harmony("ModMedicinePatch");
 			Log.Message("Patching Mod Medicines...");
 			harmony.PatchAll(Assembly.GetExecutingAssembly());
 
