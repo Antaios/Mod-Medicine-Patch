@@ -56,7 +56,8 @@ namespace ModMedicinePatch
         private static bool androids = false;
         private static List<ModMedicine> androidMedList;
         private static List<ModMedicine> humanMedList;
-        
+        private static FleshTypeDef AndroidFlesh;
+
 		static ModMedicinePatch()
 		{
             androids = TestAndroidTiers();
@@ -366,6 +367,10 @@ namespace ModMedicinePatch
             harmony.Unpatch(typeof(MedicalCareUtility).GetMethod("MedicalCareSelectButton"),androidMedCareSelectPatch);
             */
             harmony.Unpatch(typeof(MedicalCareUtility).GetMethod("MedicalCareSelectButton"), HarmonyPatchType.Prefix, "rimworld.rwmods.androidtiers");
+
+            //get android flesh type
+            AndroidFlesh = (FleshTypeDef)GenDefDatabase.GetDef(typeof(FleshTypeDef), "AndroidTier", true);
+            
             //create android-only med list and store
             androidMedList = new List<ModMedicine>();
             humanMedList = new List<ModMedicine>();
@@ -460,7 +465,7 @@ namespace ModMedicinePatch
 
         public static bool IsAndroid(Pawn p)
         {
-            return p.RaceProps.FleshType == FleshTypeDefOfAT.AndroidTier;
+            return p.RaceProps.FleshType == AndroidFlesh;
         }
 
         public static bool IsAndroidMedicine(ModMedicine m)
@@ -495,9 +500,4 @@ namespace ModMedicinePatch
 	}
 
     //get rimworld to give me the flesh type def of androids, if they exist.
-    [DefOf]
-    class FleshTypeDefOfAT
-    {
-        public static FleshTypeDef AndroidTier;
-    }
 }
