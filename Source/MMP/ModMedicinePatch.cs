@@ -43,7 +43,7 @@ namespace ModMedicinePatch
 	}
 
 	[StaticConstructorOnStartup]
-	public static class ModMedicinePatch
+    public static class ModMedicinePatch
 	{
 		//meds list, in order from worst to best
 		public static List<ModMedicine> medList;
@@ -52,9 +52,15 @@ namespace ModMedicinePatch
 
 		private static bool medicalCarePainting = false;
 
+        public static Pawn currentMedCarePawn;
+        private static bool androids = false;
+        private static List<ModMedicine> androidMedList;
+        private static List<ModMedicine> humanMedList;
+        
 		static ModMedicinePatch()
 		{
-			List<ThingDef> medThingList = new List<ThingDef>();
+            androids = TestAndroidTiers();
+            List<ThingDef> medThingList = new List<ThingDef>();
 
 			Log.Message("Adding Basegame medsList");
 
@@ -147,6 +153,11 @@ namespace ModMedicinePatch
 
 			Traverse.Create(typeof(MedicalCareUtility)).Field("careTextures").SetValue(careTex);
 
+            if (androids)
+            {
+                PatchAndroids(harmony);
+            }
+
 			if (!foundMeds)
 			{
 				Log.Warning("Note: No modded medicines found");
@@ -188,17 +199,24 @@ namespace ModMedicinePatch
 
             //initialScaleFac is how much to scale the texture to make it the height of the rect
             float initialScaleFac = medList[0].tex.height / rect.height;
-            
+
+            List<ModMedicine> localMedList = medList;
+
+            if (androids && currentMedCarePawn != null)
+            {
+                localMedList = GetAndroidCompatMedList(currentMedCarePawn);
+            }
+
             int nRows = 1;
             int nInRow = 0;
-            if (medList.Count > aspect * 2)
+            if (localMedList.Count > aspect * 2)
             {
-                nRows = Mathf.CeilToInt(Mathf.Sqrt((float)medList.Count / (float)aspect));
+                nRows = Mathf.CeilToInt(Mathf.Sqrt((float)localMedList.Count / (float)aspect));
             }
-            int nPerRow = Mathf.CeilToInt((float)medList.Count / (float)nRows);
+            int nPerRow = Mathf.CeilToInt((float)localMedList.Count / (float)nRows);
 
 
-            float scaleFac = Mathf.Min((float)aspect / (medList.Count),1.0f);
+            float scaleFac = Mathf.Min((float)aspect / (localMedList.Count),1.0f);
 			if (nRows > 1)
             {
                 scaleFac = 1.0f / nRows;
@@ -206,11 +224,22 @@ namespace ModMedicinePatch
             //scaleFac *= initialScaleFac;
 
 			Rect rect2 = new Rect(rect.x + 0.5f * (rect.width - (nPerRow * scaleFac * rect.height)), rect.y + (1 - scaleFac * nRows) * 0.5f * rect.height, rect.height * scaleFac, rect.height * scaleFac);
-			for (int i = 0; i < medList.Count; i++)
+			for (int i = 0; i < localMedList.Count; i++)
 			{
-				ModMedicine med = medList[i];
+				ModMedicine med = localMedList[i];
 
-				Widgets.DrawHighlightIfMouseover(rect2);
+                //if (medCare == med.care)
+                if ((i > 1 && med.potency == indexedMedList[(int)medCare].potency) || medCare == med.care)
+                {
+                    Widgets.DrawBox(rect2, 1);
+                }
+
+                if ((med.potency <= indexedMedList[(int)medCare].potency && i != 0 && (int)medCare !=0) || medCare == med.care)
+                {
+                    Widgets.DrawBoxSolid(rect2, new Color(0, 1, 1, 0.3f));
+                }
+
+                Widgets.DrawHighlightIfMouseover(rect2);
 				GUI.DrawTexture(rect2, med.tex);
 
 				Widgets.DraggableResult draggableResult = Widgets.ButtonInvisibleDraggable(rect2, false);
@@ -223,11 +252,7 @@ namespace ModMedicinePatch
 					medCare = med.care;
 					SoundDefOf.Tick_High.PlayOneShotOnCamera(null);
 				}
-				if (medCare == med.care)
-				{
-					Widgets.DrawBox(rect2, 1);
-				}
-				TooltipHandler.TipRegion(rect2, () => med.care.GetLabel(), 632165 + (int)med.care * 17);
+                TooltipHandler.TipRegion(rect2, () => med.care.GetLabel(), 632165 + (int)med.care * 17);
 
                 nInRow++;
 
@@ -267,7 +292,11 @@ namespace ModMedicinePatch
 		{
 			Func<Pawn, MedicalCareCategory> getPayload = new Func<Pawn, MedicalCareCategory>(DynGetMedicalCare);
 			Func<Pawn, IEnumerable<Widgets.DropdownMenuElement<MedicalCareCategory>>> menuGenerator = new Func<Pawn, IEnumerable<Widgets.DropdownMenuElement<MedicalCareCategory>>>(DynMedGenerateMenu);
-			Texture2D buttonIcon = GetCareTexture(pawn.playerSettings.medCare);
+            Texture2D buttonIcon = GetCareTexture(pawn.playerSettings.medCare);
+            if (androids)
+            {
+                buttonIcon = FindBestAndroidCompatMedicine(pawn).tex;
+            }
 			Widgets.Dropdown<Pawn, MedicalCareCategory>(rect, pawn, getPayload, menuGenerator, null, buttonIcon, null, null, null, true);
 		}
 
@@ -278,26 +307,197 @@ namespace ModMedicinePatch
 
 		public static IEnumerable<Widgets.DropdownMenuElement<MedicalCareCategory>> DynMedGenerateMenu(Pawn p)
 		{
-			for (int i = 0; i < medList.Count; i++)
+            List<ModMedicine> localMedList = medList;
+            if (androids)
+            {
+                localMedList = GetAndroidCompatMedList(p);
+            }
+			for (int i = 0; i < localMedList.Count; i++)
 			{
-				ModMedicine med = medList[i];
+				ModMedicine med = localMedList[i];
 
-				yield return new Widgets.DropdownMenuElement<MedicalCareCategory>
-				{
-					option = new FloatMenuOption(med.care.GetLabel(), delegate
-					{
-						p.playerSettings.medCare = med.care;
-					}, MenuOptionPriority.Default, null, null, 30f, rect =>
-					{
-						//Float menu medicine icon inspired by Fluffy's Pharmacist.
-						Rect iconRect = new Rect(0f, 0f, 24,24).CenteredOnXIn(rect).CenteredOnYIn(rect);
-						GUI.DrawTexture(iconRect, med.tex);
-						return false;
-					}, null),
-					payload = med.care
-				};
+                yield return new Widgets.DropdownMenuElement<MedicalCareCategory>
+                {
+                    /*
+                    option = new FloatMenuOption(med.care.GetLabel(), delegate
+                    {
+                        p.playerSettings.medCare = med.care;
+                    }, MenuOptionPriority.Default, null, null, 30f, rect =>
+                    {
+                        //Float menu medicine icon inspired by Fluffy's Pharmacist.
+                        Rect iconRect = new Rect(0f, 0f, 24, 24).CenteredOnXIn(rect).CenteredOnYIn(rect);
+                        GUI.DrawTexture(iconRect, med.tex);
+                        return false;
+                    }, null),
+                    payload = med.care*/
+                    option = new FloatMenuOption(med.care.GetLabel(), delegate
+                    {
+                        p.playerSettings.medCare = med.care;
+                    }, med.tex, Color.white),
+                    payload = med.care
+                };
 			}
 		}
 
+        public static List<ModMedicine> GetAndroidCompatMedList(Pawn p = null)
+        {
+            if (MOARANDROIDS.Settings.androidsCanUseOrganicMedicine || p == null)
+            {
+                return medList;
+            }
+
+            if (IsAndroid(p))
+            {
+                return androidMedList;
+            }
+            else
+            {
+                return humanMedList;
+            }
+        }
+
+        public static void PatchAndroids(Harmony harmony)
+        {
+            //patch the drawOverviewTab, so we can pass info about the current pawn displayed to the medicalcaresetter
+            harmony.Patch(typeof(HealthCardUtility).GetMethod("DrawOverviewTab", BindingFlags.NonPublic | BindingFlags.Static), new HarmonyMethod(typeof(DrawOverviewTab).GetMethod("_Prefix")), new HarmonyMethod(typeof(DrawOverviewTab).GetMethod("_Postfix")));
+
+            //unpatch the medical care select button, we'll take over that for andoirdtiers
+            /*var androidMedCareSelectPatch = AccessTools.Inner(AccessTools.TypeByName("MOARANDROIDS.MedicalCareUtility_Patch"), "MedicalCareSelectButton_Patch").GetMethod("Listener", BindingFlags.Static);
+            harmony.Unpatch(typeof(MedicalCareUtility).GetMethod("MedicalCareSelectButton"),androidMedCareSelectPatch);
+            */
+            harmony.Unpatch(typeof(MedicalCareUtility).GetMethod("MedicalCareSelectButton"), HarmonyPatchType.Prefix, "rimworld.rwmods.androidtiers");
+            //create android-only med list and store
+            androidMedList = new List<ModMedicine>();
+            humanMedList = new List<ModMedicine>();
+            
+            for (int i = 0; i < medList.Count; i++)
+            {
+                //always add no care and no medicine
+                if (i == 0)
+                {
+                    androidMedList.Add(medList[i]);
+                    humanMedList.Add(medList[i]);
+                }
+                else if (i == 1)
+                {
+                    humanMedList.Add(medList[i]);
+                    //change no medicine texture for androids
+                    androidMedList.Add(new ModMedicine((MedicalCareCategory)1, 0, ContentFinder<Texture2D>.Get("Things/Misc/ATPP_OnlyDocVisit", true)));
+                }
+                else
+                {
+                    if (IsAndroidMedicine(medList[i]))
+                    {
+                        androidMedList.Add(medList[i]);
+                    }
+                    else
+                    {
+                        humanMedList.Add(medList[i]);
+                    }
+                }
+            }
+        }
+
+        public static ModMedicine FindBestAndroidCompatMedicine(Pawn p)
+        {
+            ModMedicine bestMed = medList[0];
+            if (DynGetMedicalCare(p) == MedicalCareCategory.NoMeds)
+            {
+                bestMed = medList[1];
+            }
+            if (IsAndroid(p))
+            {
+                List<ModMedicine> localMedList = androidMedList;
+                if (MOARANDROIDS.Settings.androidsCanUseOrganicMedicine)
+                {
+                    localMedList = medList;
+                }
+                
+                for (int i = 2; i < localMedList.Count; i++)
+                {
+                    if (!GetDynamicAllowsMedicine(DynGetMedicalCare(p), localMedList[i].thingDef))
+                    {
+                        continue;
+                    }
+                    if (localMedList[i].potency > bestMed.potency)
+                    {
+                        bestMed = localMedList[i];
+                    }
+                    else if (localMedList[i].potency == bestMed.potency)
+                    {
+                        if (IsAndroidMedicine(localMedList[i]))
+                        {
+                            bestMed = localMedList[i];
+                        }
+                    }
+                }
+            }
+            else
+            {
+                List<ModMedicine> localMedList = humanMedList;
+
+                for (int i = 2; i < localMedList.Count; i++)
+                {
+                    if (!GetDynamicAllowsMedicine(DynGetMedicalCare(p), localMedList[i].thingDef))
+                    {
+                        continue;
+                    }
+                    if (localMedList[i].potency > bestMed.potency)
+                    {
+                        bestMed = localMedList[i];
+                    }
+                    else if (localMedList[i].potency == bestMed.potency)
+                    {
+                        if (!IsAndroidMedicine(localMedList[i]))
+                        {
+                            bestMed = localMedList[i];
+                        }
+                    }
+                }
+            }
+            return bestMed;
+        }
+
+        public static bool IsAndroid(Pawn p)
+        {
+            return p.RaceProps.FleshType == FleshTypeDefOfAT.AndroidTier;
+        }
+
+        public static bool IsAndroidMedicine(ModMedicine m)
+        {
+            return MOARANDROIDS.Utils.ExceptionNanoKits.Contains(m.thingDef.defName);
+        }
+
+        public static bool TestAndroidTiers()
+        {
+            bool an = false;
+            try
+            {
+                ((Action)(() =>
+                {
+                    if (MOARANDROIDS.Utils.ExceptionNanoKits != null)
+                    {
+                        Log.Message("MMP: Detected Android Tiers");
+                        an = true;
+                    }
+                    else
+                    {
+                        Log.Message("MMP: How'd we get here?");
+                    }
+                }))();
+            }
+            catch (TypeLoadException)
+            {
+                Log.Message("MMP: Android Tiers not detected");
+            }
+            return an;
+        }
 	}
+
+    //get rimworld to give me the flesh type def of androids, if they exist.
+    [DefOf]
+    class FleshTypeDefOfAT
+    {
+        public static FleshTypeDef AndroidTier;
+    }
 }

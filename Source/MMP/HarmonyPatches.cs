@@ -53,7 +53,20 @@ namespace ModMedicinePatch
 	[HarmonyPatch(typeof(RimWorld.MedicalCareUtility), "AllowsMedicine")]
 	public static class AllowsMedicine
 	{
-		[HarmonyPrefix]
+        [HarmonyPrefix]
+        public static bool _Prefix(this MedicalCareCategory cat, ThingDef meds, ref bool __state,ref bool __result)
+        {
+            //if MedicalCareCategory is within base game range, use original method - EXCEPT glitterworld.
+            __state = false;
+            if ((int)cat <= 3) __state = true;
+
+            if (!__state)
+            {
+                __result = ModMedicinePatch.GetDynamicAllowsMedicine(cat, meds);
+            }
+            return __state;
+        }
+        /*[HarmonyPrefix]
 		public static bool _Prefix(this MedicalCareCategory cat, ref bool __state)
 		{
 			//if MedicalCareCategory is within base game range, use original method - EXCEPT glitterworld.
@@ -69,8 +82,8 @@ namespace ModMedicinePatch
 			{
 				__result = ModMedicinePatch.GetDynamicAllowsMedicine(cat, meds);
 			}
-		}
-	}
+		}*/
+    }
 
 	//'Replace' MedicalCareSelectButton to take into account new medicines
 	[HarmonyPatch(typeof(RimWorld.MedicalCareUtility), "MedicalCareSelectButton")]
@@ -83,4 +96,18 @@ namespace ModMedicinePatch
 			return false;
 		}
 	}
+
+    //Patch HealthTabUtility, so we can capture the current pawn
+    public static class DrawOverviewTab
+    {
+        public static bool _Prefix(Pawn pawn)
+        {
+            ModMedicinePatch.currentMedCarePawn = pawn;
+            return true;
+        }
+        public static void _Postfix()
+        {
+            ModMedicinePatch.currentMedCarePawn = null;
+        }
+    }
 }
