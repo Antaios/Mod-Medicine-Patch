@@ -34,3 +34,7 @@ E:\SteamLibrary\steamapps\common\RimWorld\Mods\Mod-Medicine-Patch\1.3\Assemblies
 E:\SteamLibrary\steamapps\common\RimWorld\Mods\Mod-Medicine-Patch\Source\MMP\obj\Release\Mod Medicine Patch.csprojAssemblyReference.cache
 E:\SteamLibrary\steamapps\common\RimWorld\Mods\Mod-Medicine-Patch\Source\MMP\obj\Release\Mod Medicine Patch.csproj.CoreCompileInputs.cache
 E:\SteamLibrary\steamapps\common\RimWorld\Mods\Mod-Medicine-Patch\Source\MMP\obj\Release\Mod Medicine Patch.dll
+H:\Rimworld\My Mods\Git\Mod-Medicine-Patch\Source\MMP\obj\Release\Mod Medicine Patch.csproj.AssemblyReference.cache
+H:\Rimworld\My Mods\Git\Mod-Medicine-Patch\Source\MMP\obj\Release\Mod Medicine Patch.csproj.CoreCompileInputs.cache
+H:\Rimworld\My Mods\Git\Mod-Medicine-Patch\Source\MMP\obj\Release\Mod Medicine Patch.dll
+H:\Rimworld\My Mods\Git\Mod-Medicine-Patch\1.4\Assemblies\Mod Medicine Patch.dll

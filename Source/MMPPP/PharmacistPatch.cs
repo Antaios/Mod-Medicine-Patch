@@ -66,7 +66,7 @@ namespace ModMedicinePatch
 			}
 			catch (TypeLoadException)
 			{
-				Log.Message("Pharmacist not detected");
+				
 			}
 		}
 

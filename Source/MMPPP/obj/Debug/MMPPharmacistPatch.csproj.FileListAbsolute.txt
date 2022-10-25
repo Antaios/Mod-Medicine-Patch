@@ -12,3 +12,7 @@ H:\Rimworld\RimWorld1-3-3072Win64\Mods\Mod-Medicine-Patch\Source\MMPPP\obj\Debug
 H:\Rimworld\RimWorld1-3-3072Win64\Mods\Mod-Medicine-Patch\Source\MMPPP\obj\Debug\MMPPharmacistPatch.csproj.CoreCompileInputs.cache
 H:\Rimworld\RimWorld1-3-3072Win64\Mods\Mod-Medicine-Patch\Source\MMPPP\obj\Debug\MMPPharmacistPatch.csproj.CopyComplete
 H:\Rimworld\RimWorld1-3-3072Win64\Mods\Mod-Medicine-Patch\Source\MMPPP\obj\Debug\MMPPharmacistPatch.dll
+H:\Rimworld\My Mods\Git\Mod-Medicine-Patch\1.4MMPPP\Assemblies\MMPPharmacistPatch.dll
+H:\Rimworld\My Mods\Git\Mod-Medicine-Patch\Source\MMPPP\obj\Debug\MMPPharmacistPatch.csproj.AssemblyReference.cache
+H:\Rimworld\My Mods\Git\Mod-Medicine-Patch\Source\MMPPP\obj\Debug\MMPPharmacistPatch.csproj.CoreCompileInputs.cache
+H:\Rimworld\My Mods\Git\Mod-Medicine-Patch\Source\MMPPP\obj\Debug\MMPPharmacistPatch.dll

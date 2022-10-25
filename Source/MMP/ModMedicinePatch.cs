@@ -54,6 +54,8 @@ namespace ModMedicinePatch
 
         public static Pawn currentMedCarePawn;
         private static bool androids = false;
+        private static bool smartMedicineInstalled = false;
+        public static bool pharmacist = false;
         private static List<ModMedicine> androidMedList;
         private static List<ModMedicine> humanMedList;
         private static FleshTypeDef AndroidFlesh;
@@ -61,6 +63,7 @@ namespace ModMedicinePatch
 		static ModMedicinePatch()
 		{
             androids = TestAndroidTiers();
+            smartMedicineInstalled = TestSmartMedicine();
             List<ThingDef> medThingList = new List<ThingDef>();
 
 			Log.Message("Adding Basegame medsList");
@@ -136,13 +139,11 @@ namespace ModMedicinePatch
             Log.Message("Sorted meds list: ");
 			foreach (ModMedicine m in medList)
 			{
-                Log.Message(m.care.GetLabel());
                 if (m.thingDef != null)
                 {
                     InventoryStockGroupDefOf.Medicine.thingDefs.Add(m.thingDef);
                     Log.Message(m.thingDef.LabelCap);
                 }
-                Log.Message("-");
 			}
 
             InventoryStockGroupDefOf.Medicine.max = InventoryStockGroupDefOf.Medicine.thingDefs.Count;
@@ -158,6 +159,13 @@ namespace ModMedicinePatch
             {
                 PatchAndroids(harmony);
             }
+
+            if (smartMedicineInstalled)
+            {
+                PatchSmartMedicine(harmony);
+            }
+
+            pharmacist = PatchPharmacist();
 
 			if (!foundMeds)
 			{
@@ -497,7 +505,94 @@ namespace ModMedicinePatch
             }
             return an;
         }
-	}
 
-    //get rimworld to give me the flesh type def of androids, if they exist.
+        public static void PatchSmartMedicine(Harmony harmony)
+        {
+            //overwrite  the Smart Medicine 
+            harmony.Patch(typeof(SmartMedicine.HediffRowPriorityCare).GetMethod("LabelButton", BindingFlags.Public | BindingFlags.Static), new HarmonyMethod(typeof(SM_Patches).GetMethod("HediffRowPriorityCare_LabelButton_Prefix")));
+            
+            //unpatch the smart medicine hediff priority getter, so we can repatch it.
+            harmony.Unpatch(typeof(Hediff).GetProperty("TendPriority").GetGetMethod(), HarmonyPatchType.Prefix, "uuugggg.rimworld.SmartMedicine.main");
+            
+            //replace the patch we just removed.
+            harmony.Patch(typeof(Hediff).GetProperty("TendPriority").GetGetMethod(), new HarmonyMethod(typeof(SM_Patches).GetMethod("PriorityHediff_Prefix")));
+        }
+
+        public static void SmartMedicineLabelButton(Rect rect, string text, Hediff hediff)
+        {
+            Widgets.Label(rect, text);
+            if (hediff.TendableNow(true) && Event.current.button == 1 && Widgets.ButtonInvisible(rect))
+            {
+                List<FloatMenuOption> list = new List<FloatMenuOption>();
+
+                List<ModMedicine> localMedList = medList;
+                if (androids)
+                {
+                    localMedList = GetAndroidCompatMedList(hediff.pawn);
+                }
+
+                //Default care
+                list.Add(new FloatMenuOption("TD.DefaultCare".Translate(), delegate
+                {
+                    SmartMedicine.PriorityCareComp.Get().Remove(hediff);
+                }));
+
+                for (int i = 0; i < localMedList.Count; i++)
+                {
+                    ModMedicine med = localMedList[i];
+
+                    list.Add(new FloatMenuOption(med.care.GetLabel(), delegate
+                    {
+                        SmartMedicine.PriorityCareComp.Get()[hediff] = med.care;
+                    }, med.tex, Color.white));
+                }
+                Find.WindowStack.Add(new FloatMenu(list));
+            }
+        }
+
+        public static bool TestSmartMedicine()
+        {
+            bool sm = false;
+            try
+            {
+                ((Action)(() =>
+                {
+                    if (SmartMedicine.Mod.settings.useDoctorMedicine != null)
+                    {
+                        Log.Message("MMP: Detected Smart Medicine");
+                        sm = true;
+                    }
+                    else
+                    {
+                        Log.Message("MMP: How'd we get here (SM)?");
+                    }
+                }))();
+            }
+            catch (TypeLoadException)
+            {
+                Log.Message("MMP: Smart Medicine not detected");
+            }
+            return sm;
+        }
+
+        public static bool PatchPharmacist()
+        {
+            try
+            {
+                ((Action)(() =>
+                {
+                    if (Pharmacist.Resources.medcareGraphics != null)
+                    {
+                        Log.Message("MMP: Pharmacist Detected");
+                    }
+                }))();
+                return true;
+            }
+            catch (TypeLoadException)
+            {
+                Log.Message("MMP: Pharmacist not detected");
+                return false;
+            }
+        }
+    }
 }

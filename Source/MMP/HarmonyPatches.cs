@@ -110,4 +110,29 @@ namespace ModMedicinePatch
             ModMedicinePatch.currentMedCarePawn = null;
         }
     }
+
+	public static class SM_Patches
+    {
+		public static bool HediffRowPriorityCare_LabelButton_Prefix(Rect rect, string text, Hediff hediff)
+        {
+			ModMedicinePatch.SmartMedicineLabelButton(rect, text, hediff);
+			return false;
+		}
+		public static bool PriorityHediff_Prefix(Hediff __instance, ref float __result)
+        {
+			if (SmartMedicine.PriorityCareComp.Get().TryGetValue(__instance, out MedicalCareCategory hediffCare))
+			{
+				MedicalCareCategory defaultCare = __instance.pawn.playerSettings.medCare;
+				if (ModMedicinePatch.pharmacist)
+                {
+					defaultCare = Pharmacist.PharmacistUtility.TendAdvice(__instance.pawn);
+                }
+				int diff = ModMedicinePatch.medList.IndexOf(ModMedicinePatch.GetMedicineByCare(hediffCare)) - ModMedicinePatch.medList.IndexOf(ModMedicinePatch.GetMedicineByCare(defaultCare));
+				//float diff = ModMedicinePatch.GetCarePotency(hediffCare) - ModMedicinePatch.GetCarePotency(defaultCare);
+				__result += diff * 5;//Raise priority for higher meds, lower for lower meds.
+				return false;
+			}
+			return true;
+		}
+    }
 }
