@@ -125,7 +125,7 @@ namespace ModMedicinePatch
 				MedicalCareCategory defaultCare = __instance.pawn.playerSettings.medCare;
 				if (ModMedicinePatch.pharmacist)
                 {
-					defaultCare = Pharmacist.PharmacistUtility.TendAdvice(__instance.pawn);
+					defaultCare = GetCarePharmacist(__instance.pawn);
                 }
 				int diff = ModMedicinePatch.medList.IndexOf(ModMedicinePatch.GetMedicineByCare(hediffCare)) - ModMedicinePatch.medList.IndexOf(ModMedicinePatch.GetMedicineByCare(defaultCare));
 				//float diff = ModMedicinePatch.GetCarePotency(hediffCare) - ModMedicinePatch.GetCarePotency(defaultCare);
@@ -134,5 +134,10 @@ namespace ModMedicinePatch
 			}
 			return true;
 		}
+
+		public static MedicalCareCategory GetCarePharmacist(Pawn p)
+        {
+			return Pharmacist.PharmacistUtility.TendAdvice(p);
+        }
     }
 }
