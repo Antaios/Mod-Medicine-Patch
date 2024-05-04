@@ -53,16 +53,11 @@ namespace ModMedicinePatch
 		private static bool medicalCarePainting = false;
 
         public static Pawn currentMedCarePawn;
-        private static bool androids = false;
         private static bool smartMedicineInstalled = false;
         public static bool pharmacist = false;
-        private static List<ModMedicine> androidMedList;
-        private static List<ModMedicine> humanMedList;
-        private static FleshTypeDef AndroidFlesh;
 
 		static ModMedicinePatch()
 		{
-            androids = TestAndroidTiers();
             smartMedicineInstalled = TestSmartMedicine();
             List<ThingDef> medThingList = new List<ThingDef>();
 
@@ -155,11 +150,6 @@ namespace ModMedicinePatch
 
 			Traverse.Create(typeof(MedicalCareUtility)).Field("careTextures").SetValue(careTex);
 
-            if (androids)
-            {
-                PatchAndroids(harmony);
-            }
-
             if (smartMedicineInstalled)
             {
                 PatchSmartMedicine(harmony);
@@ -210,11 +200,6 @@ namespace ModMedicinePatch
             float initialScaleFac = medList[0].tex.height / rect.height;
 
             List<ModMedicine> localMedList = medList;
-
-            if (androids && currentMedCarePawn != null)
-            {
-                localMedList = GetAndroidCompatMedList(currentMedCarePawn);
-            }
 
             int nRows = 1;
             int nInRow = 0;
@@ -302,10 +287,6 @@ namespace ModMedicinePatch
 			Func<Pawn, MedicalCareCategory> getPayload = new Func<Pawn, MedicalCareCategory>(DynGetMedicalCare);
 			Func<Pawn, IEnumerable<Widgets.DropdownMenuElement<MedicalCareCategory>>> menuGenerator = new Func<Pawn, IEnumerable<Widgets.DropdownMenuElement<MedicalCareCategory>>>(DynMedGenerateMenu);
             Texture2D buttonIcon = GetCareTexture(pawn.playerSettings.medCare);
-            if (androids)
-            {
-                buttonIcon = FindBestAndroidCompatMedicine(pawn).tex;
-            }
 			Widgets.Dropdown<Pawn, MedicalCareCategory>(rect, pawn, getPayload, menuGenerator, null, buttonIcon, null, null, null, true);
 		}
 
@@ -317,10 +298,6 @@ namespace ModMedicinePatch
 		public static IEnumerable<Widgets.DropdownMenuElement<MedicalCareCategory>> DynMedGenerateMenu(Pawn p)
 		{
             List<ModMedicine> localMedList = medList;
-            if (androids)
-            {
-                localMedList = GetAndroidCompatMedList(p);
-            }
 			for (int i = 0; i < localMedList.Count; i++)
 			{
 				ModMedicine med = localMedList[i];
@@ -346,164 +323,13 @@ namespace ModMedicinePatch
                     payload = med.care
                 };
 			}
-		}
-
-        public static List<ModMedicine> GetAndroidCompatMedList(Pawn p = null)
-        {
-            if (MOARANDROIDS.Settings.androidsCanUseOrganicMedicine || p == null)
+            yield return new Widgets.DropdownMenuElement<MedicalCareCategory>
             {
-                return medList;
-            }
-
-            if (IsAndroid(p))
-            {
-                return androidMedList;
-            }
-            else
-            {
-                return humanMedList;
-            }
-        }
-
-        public static void PatchAndroids(Harmony harmony)
-        {
-            //patch the drawOverviewTab, so we can pass info about the current pawn displayed to the medicalcaresetter
-            harmony.Patch(typeof(HealthCardUtility).GetMethod("DrawOverviewTab", BindingFlags.NonPublic | BindingFlags.Static), new HarmonyMethod(typeof(DrawOverviewTab).GetMethod("_Prefix")), new HarmonyMethod(typeof(DrawOverviewTab).GetMethod("_Postfix")));
-
-            //unpatch the medical care select button, we'll take over that for andoirdtiers
-            /*var androidMedCareSelectPatch = AccessTools.Inner(AccessTools.TypeByName("MOARANDROIDS.MedicalCareUtility_Patch"), "MedicalCareSelectButton_Patch").GetMethod("Listener", BindingFlags.Static);
-            harmony.Unpatch(typeof(MedicalCareUtility).GetMethod("MedicalCareSelectButton"),androidMedCareSelectPatch);
-            */
-            harmony.Unpatch(typeof(MedicalCareUtility).GetMethod("MedicalCareSelectButton"), HarmonyPatchType.Prefix, "rimworld.rwmods.androidtiers");
-
-            //get android flesh type
-            AndroidFlesh = (FleshTypeDef)GenDefDatabase.GetDef(typeof(FleshTypeDef), "AndroidTier", true);
-            
-            //create android-only med list and store
-            androidMedList = new List<ModMedicine>();
-            humanMedList = new List<ModMedicine>();
-            
-            for (int i = 0; i < medList.Count; i++)
-            {
-                //always add no care and no medicine
-                if (i == 0)
+                option = new FloatMenuOption("ChangeDefaults".Translate(), delegate
                 {
-                    androidMedList.Add(medList[i]);
-                    humanMedList.Add(medList[i]);
-                }
-                else if (i == 1)
-                {
-                    humanMedList.Add(medList[i]);
-                    //change no medicine texture for androids
-                    androidMedList.Add(new ModMedicine((MedicalCareCategory)1, 0, ContentFinder<Texture2D>.Get("Things/Misc/ATPP_OnlyDocVisit", true)));
-                }
-                else
-                {
-                    if (IsAndroidMedicine(medList[i]))
-                    {
-                        androidMedList.Add(medList[i]);
-                    }
-                    else
-                    {
-                        humanMedList.Add(medList[i]);
-                    }
-                }
-            }
-        }
-
-        public static ModMedicine FindBestAndroidCompatMedicine(Pawn p)
-        {
-            ModMedicine bestMed = medList[0];
-            if (DynGetMedicalCare(p) == MedicalCareCategory.NoMeds)
-            {
-                bestMed = medList[1];
-            }
-            if (IsAndroid(p))
-            {
-                List<ModMedicine> localMedList = androidMedList;
-                if (MOARANDROIDS.Settings.androidsCanUseOrganicMedicine)
-                {
-                    localMedList = medList;
-                }
-                
-                for (int i = 2; i < localMedList.Count; i++)
-                {
-                    if (!GetDynamicAllowsMedicine(DynGetMedicalCare(p), localMedList[i].thingDef))
-                    {
-                        continue;
-                    }
-                    if (localMedList[i].potency > bestMed.potency)
-                    {
-                        bestMed = localMedList[i];
-                    }
-                    else if (localMedList[i].potency == bestMed.potency)
-                    {
-                        if (IsAndroidMedicine(localMedList[i]))
-                        {
-                            bestMed = localMedList[i];
-                        }
-                    }
-                }
-            }
-            else
-            {
-                List<ModMedicine> localMedList = humanMedList;
-
-                for (int i = 2; i < localMedList.Count; i++)
-                {
-                    if (!GetDynamicAllowsMedicine(DynGetMedicalCare(p), localMedList[i].thingDef))
-                    {
-                        continue;
-                    }
-                    if (localMedList[i].potency > bestMed.potency)
-                    {
-                        bestMed = localMedList[i];
-                    }
-                    else if (localMedList[i].potency == bestMed.potency)
-                    {
-                        if (!IsAndroidMedicine(localMedList[i]))
-                        {
-                            bestMed = localMedList[i];
-                        }
-                    }
-                }
-            }
-            return bestMed;
-        }
-
-        public static bool IsAndroid(Pawn p)
-        {
-            return p.RaceProps.FleshType == AndroidFlesh;
-        }
-
-        public static bool IsAndroidMedicine(ModMedicine m)
-        {
-            return MOARANDROIDS.Utils.ExceptionNanoKits.Contains(m.thingDef.defName);
-        }
-
-        public static bool TestAndroidTiers()
-        {
-            bool an = false;
-            try
-            {
-                ((Action)(() =>
-                {
-                    if (MOARANDROIDS.Utils.ExceptionNanoKits != null)
-                    {
-                        Log.Message("MMP: Detected Android Tiers");
-                        an = true;
-                    }
-                    else
-                    {
-                        Log.Message("MMP: How'd we get here?");
-                    }
-                }))();
-            }
-            catch (TypeLoadException)
-            {
-                Log.Message("MMP: Android Tiers not detected");
-            }
-            return an;
+                    Find.WindowStack.Add(new Dialog_MedicalDefaults());
+                })
+            };
         }
 
         public static void PatchSmartMedicine(Harmony harmony)
@@ -526,10 +352,6 @@ namespace ModMedicinePatch
                 List<FloatMenuOption> list = new List<FloatMenuOption>();
 
                 List<ModMedicine> localMedList = medList;
-                if (androids)
-                {
-                    localMedList = GetAndroidCompatMedList(hediff.pawn);
-                }
 
                 //Default care
                 list.Add(new FloatMenuOption("TD.DefaultCare".Translate(), delegate
